@@ -1,0 +1,71 @@
+================================================================================
+DeuDash — Resumen de inconveniente y resolución
+Fecha: 2026-07-31
+================================================================================
+
+CONTEXTO
+--------
+Migración de la UI a diseño mobile-first (estilos base para mobile, breakpoint
+desktop en 768px). Primero se eliminó todo el código responsive existente
+(media query max-width, flex-wrap, ResponsiveContainer, max-width: 1100px) y
+luego se reconstruyó el layout con media queries de min-width.
+
+SÍNTOMA
+-------
+En DevTools de Brave (modo mobile, 320px) la app se veía rota:
+- La sección inferior (formulario + tabla) desbordaba el ancho del viewport y
+  generaba scroll horizontal.
+- El layout quedaba inconsistente: parte superior de 320px, parte inferior de 526px.
+
+DIAGNÓSTICO
+-----------
+1. Snippet en consola de DevTools con métricas reales (getBoundingClientRect,
+   scrollWidth, clientWidth):
+   - layoutViewport = 320px (correcto para modo mobile)
+   - body.scrollW = 546px (desborde horizontal)
+   - FORM (tarjeta) = 526px y DIV tarjeta (tabla) = 526px  <- elementos desbordados
+   - Header, KPIs y gráfico medían correctamente.
+
+2. Causas falsas descartadas:
+   - El gráfico (Recharts ResponsiveContainer) funcionaba bien: el SVG medía
+     242px dentro de una card de 280px (280 - 36 de padding).
+   - El body.scrollW de 546 incluía el shadow root de la extensión Proton Pass
+     (PROTONPASS-ROOT-13E2), invisible y ajeno a la app.
+
+CAUSA RAÍZ
+----------
+.columnas es un grid con pista "1fr", que equivale a minmax(auto, 1fr).
+El min-width: auto de los grid items (las cards de formulario y tabla) impide
+que la pista se encoja por debajo del ancho mínimo intrínseco del contenido.
+
+La tabla tiene columnas con white-space: nowrap (fecha, monto, badges, acciones),
+lo que le da un ancho mínimo intrínseco de ~526px. Ese ancho forzaba a toda la
+pista del grid a 526px, desbordando el viewport de 320px.
+
+El overflow-x: auto de .tabla-wrap no contenía el desborde porque el elemento
+con overflow NO es el grid item: el grid item es .tarjeta (la card), y su
+min-width: auto hereda el min-content de la tabla.
+
+RESOLUCIÓN (src/index.css)
+--------------------------
+1. ".columnas > * { min-width: 0 }"  <- FIX PRINCIPAL
+   Permite que la pista del grid se encoja hasta el ancho del contenedor.
+   Formulario y tabla pasan de 526px a 280px; la tabla scrollea internamente
+   en .tabla-wrap.
+
+2. "input, select { min-width: 0 }"  <- hardening
+   Evita que selects/inputs fuercen desborde en tracks angostos.
+
+APRENDIZAJES CLAVE
+------------------
+- En CSS Grid, "1fr" = "minmax(auto, 1fr)". Para que un grid item se encoja
+  por debajo del ancho de su contenido hay que ponerle "min-width: 0". Es el
+  fix canónico para "grid item con contenido ancho desborda".
+- overflow-x: auto en un wrapper solo funciona si el grid item ES el elemento
+  con overflow (o tiene min-width: 0).
+- ResponsiveContainer de Recharts NO era el problema: mide el padre con
+  ResizeObserver y renderiza el SVG al ancho correcto.
+- Al debuggear layout, usar snippets de consola con getBoundingClientRect /
+  scrollWidth / clientWidth antes de tocar código.
+- Los shadow roots de extensiones (Proton Pass, etc.) inflan document.scrollWidth;
+  ignorarlos al diagnosticar.
