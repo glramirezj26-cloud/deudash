@@ -253,9 +253,19 @@ button.peligro.armado:hover {
   margin-bottom: var(--gap-section);
 }
 
+.kpi.destacada,
+.kpi.variacion {
+  grid-column: 1 / -1;
+}
+
 @media (min-width: 768px) {
   .kpis {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .kpi.destacada,
+  .kpi.variacion {
+    grid-column: span 2;
   }
 }
 
@@ -287,6 +297,113 @@ button.peligro.armado:hover {
 .kpi .sub {
   font-size: var(--fs-sm);
   text-fit: shrink 85%;
+}
+
+.kpi .detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 8px;
+}
+
+.kpi .cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kpi .lado-saldo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kpi .lado-progreso {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.kpi .fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: var(--fs-sm);
+  min-width: 0;
+}
+
+.kpi .fila .k {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.kpi .fila .v {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.barra-progreso {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-pop);
+  overflow: hidden;
+  margin: 2px 0;
+}
+
+.barra-progreso > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--debit);
+}
+
+@container (min-width: 480px) {
+  .kpi.destacada .cuerpo {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .kpi.destacada .lado-progreso {
+    max-width: 60%;
+  }
+}
+
+.selectores {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.selectores .pill {
+  flex: 1;
+  min-width: 30px;
+  padding: 3px 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.4;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-pop);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.selectores .pill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.selectores .pill.activo {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .kpi.destacada {
@@ -348,6 +465,12 @@ button.peligro.armado:hover {
 @media (max-width: 767px) {
   .chart-ancho {
     min-width: 700px;
+  }
+
+  .bubble-punto .tooltip-chart {
+    max-width: calc(100vw - 16px);
+    max-height: 200px;
+    overflow-y: auto;
   }
 }
 
@@ -448,10 +571,11 @@ button.peligro.armado:hover {
   min-width: 0;
 }
 
-.celda-nombre {
+.celda-nombre .celda-nombre-fila {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  min-width: 0;
 }
 
 .truncar {
@@ -493,6 +617,7 @@ button.peligro.armado:hover {
   padding: 10px 12px;
   font-size: var(--fs-body);
   min-width: 180px;
+  max-width: 280px;
   box-shadow: var(--shadow-elevated);
 }
 
@@ -510,6 +635,17 @@ button.peligro.armado:hover {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+}
+
+.tooltip-item > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tooltip-item > span:last-child {
+  white-space: nowrap;
 }
 
 /* Composición de la deuda */
@@ -789,6 +925,12 @@ select:focus {
 }
 
 .nota {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.tabla-info {
+  margin: -2px 0 10px;
   color: var(--muted);
   font-size: var(--fs-sm);
 }

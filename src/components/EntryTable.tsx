@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Entrada } from '../types';
-import { fmt, MES_CORTO, nombreCorto } from '../lib/calc';
+import { fmt, kpis, MES_CORTO, nombreCorto } from '../lib/calc';
 
 type Clave = 'nombre' | 'fecha' | 'tipo' | 'monto';
 
@@ -42,6 +42,7 @@ export default function EntryTable({ entradas, onToggle, onToggleAll, onEditar, 
   });
   const ocultas = entradas.filter((e) => !e.visible).length;
   const todasVisibles = entradas.length > 0 && ocultas === 0;
+  const r = kpis(entradas);
 
   const cambiarOrden = (clave: Clave) => {
     setSort((prev) =>
@@ -76,6 +77,11 @@ export default function EntryTable({ entradas, onToggle, onToggleAll, onEditar, 
           </label>
         </span>
       </div>
+      <p className="tabla-info">
+        {r.cantidad} movimiento{r.cantidad === 1 ? '' : 's'} · {r.creditoCount} crédito
+        {r.creditoCount === 1 ? '' : 's'} · {r.debitoCount} débito{r.debitoCount === 1 ? '' : 's'}
+        {r.desdeEtiqueta !== null && ` · desde ${r.desdeEtiqueta}`}
+      </p>
       <div className="tabla-wrap">
         <table>
           <thead>
@@ -114,8 +120,10 @@ export default function EntryTable({ entradas, onToggle, onToggleAll, onEditar, 
                   />
                 </td>
                 <td className="celda-nombre">
-                  <span className="dot" style={{ background: e.color }}></span>
-                  <span title={e.nombre}>{nombreCorto(e.nombre)}</span>
+                  <span className="celda-nombre-fila">
+                    <span className="dot" style={{ background: e.color }}></span>
+                    <span title={e.nombre}>{nombreCorto(e.nombre)}</span>
+                  </span>
                 </td>
                 <td className="fecha">
                   {MES_CORTO[e.mes - 1]} {e.anio}

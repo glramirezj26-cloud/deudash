@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -104,9 +104,41 @@ function BubblePunto({ vista, fila }: { vista: Vista; fila: PuntoSerie | Record<
 
 export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
   const [vista, setVista] = useState<Vista>('deuda');
-  const [puntoActivo, setPuntoActivo] = useState<{ x: number; y: number; indice: number } | null>(null);
+  const [puntoActivo, setPuntoActivo] = useState<{ xp: number; yp: number; indice: number } | null>(null);
+  const [posicion, setPosicion] = useState<{ left: number; top: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const esTouch = useMemo(() => window.matchMedia('(any-hover: none)').matches, []);
+
+  const medirBurbuja = useCallback(() => {
+    const cont = scrollRef.current;
+    const bur = bubbleRef.current;
+    const punto = puntoActivo;
+    if (!cont || !bur || !punto) {
+      setPosicion(null);
+      return;
+    }
+    const br = bur.getBoundingClientRect();
+    const cw = cont.clientWidth;
+    const ch = cont.clientHeight;
+    let left = Math.round(punto.xp - br.width / 2);
+    left = Math.max(4, Math.min(left, Math.max(4, cw - br.width - 4)));
+    let top = punto.yp - br.height - 8;
+    if (top < 4) top = punto.yp + 8;
+    top = Math.max(4, Math.min(top, Math.max(4, ch - br.height - 4)));
+    setPosicion({ left, top });
+  }, [puntoActivo]);
+
+  useLayoutEffect(() => {
+    medirBurbuja();
+  }, [medirBurbuja]);
+
+  useEffect(() => {
+    if (!puntoActivo) return;
+    window.addEventListener('resize', medirBurbuja);
+    return () => window.removeEventListener('resize', medirBurbuja);
+  }, [puntoActivo, medirBurbuja]);
 
   if (entradas.length === 0) {
     return (
@@ -161,7 +193,10 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
     });
   }
 
-  const manejarTap = (estado: { activeIndex?: number | string | null } | null, e: React.MouseEvent) => {
+  const manejarTap = (
+    estado: { activeIndex?: number | string | null; activeCoordinate?: { x?: number; y?: number } } | null,
+    e: React.MouseEvent
+  ) => {
     const scrollRect = scrollRef.current?.getBoundingClientRect();
     const contentRect = chartRef.current?.getBoundingClientRect();
     if (!scrollRect || !contentRect) {
@@ -193,10 +228,30 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
       return;
     }
 
+    const coordenadas = () => {
+      const coord = estado?.activeCoordinate;
+      if (
+        coord &&
+        typeof coord.x === 'number' &&
+        typeof coord.y === 'number' &&
+        Number.isFinite(coord.x) &&
+        Number.isFinite(coord.y)
+      ) {
+        return {
+          xp: contentRect.left + coord.x - scrollRect.left,
+          yp: contentRect.top + coord.y - scrollRect.top,
+        };
+      }
+      const scrollLeft = contentRect.left - scrollRect.left;
+      const plotW = contentRect.width - 48 - 10;
+      const n = data.length;
+      const centroX = plotW > 0 && n > 1 ? 48 + (plotW / (n - 1)) * indice : 48 + plotW / 2;
+      return { xp: centroX - scrollLeft, yp: e.clientY - scrollRect.top };
+    };
+    const { xp, yp } = coordenadas();
+
     setPuntoActivo((prev) =>
-      prev && prev.indice === indice
-        ? null
-        : { indice, x: e.clientX - scrollRect.left, y: e.clientY - scrollRect.top }
+      prev && prev.indice === indice ? null : { indice, xp, yp }
     );
   };
 
@@ -262,7 +317,10 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
             tickFormatter={compact}
             width={48}
           />
-          <Tooltip content={vista === 'deuda' ? <TooltipDeuda /> : <TooltipGrafico />} cursor={{ stroke: cssVar('--chart-line') }} />
+          <Tooltip
+            content={esTouch ? () => null : vista === 'deuda' ? <TooltipDeuda /> : <TooltipGrafico />}
+            cursor={esTouch ? false : { stroke: cssVar('--chart-line') }}
+          />
           <ReferenceLine y={0} stroke={cssVar('--chart-line')} />
           {vista === 'total' ? (
             <>
@@ -310,11 +368,9 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
           </div>
           {puntoActivo && puntoActivo.indice >= 0 && puntoActivo.indice < data.length && (
             <div
+              ref={bubbleRef}
               className="bubble-punto"
-              style={{
-                left: Math.max(4, Math.min(puntoActivo.x + 12, (scrollRef.current?.clientWidth ?? 320) - 190 - 4)),
-                top: Math.max(4, puntoActivo.y - 44),
-              }}
+              style={posicion ? { left: posicion.left, top: posicion.top } : { visibility: 'hidden' }}
             >
               <BubblePunto vista={vista} fila={data[puntoActivo.indice]} />
             </div>

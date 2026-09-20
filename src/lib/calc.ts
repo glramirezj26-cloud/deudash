@@ -184,18 +184,34 @@ export interface Kpis {
   pico: number | null;
   picoEtiqueta: string | null;
   porcentajePagado: number | null;
+  creditoCount: number;
+  debitoCount: number;
+  meses: number;
+  promedioCreditoMes: number | null;
+  pctRestante: number | null;
+  pctBajoPico: number | null;
+  saldoPrevio: number | null;
+  topPct: number | null;
+  desdeEtiqueta: string | null;
 }
 
-export function kpis(entradas: Entrada[]): Kpis {
+export function kpis(entradas: Entrada[], periodo = 3): Kpis {
   const serie = serieTemporal(entradas);
 
   let totalCredito = 0;
   let totalDebito = 0;
+  let creditoCount = 0;
+  let debitoCount = 0;
   const porNombre = new Map<string, number>();
 
   for (const e of entradas) {
-    if (e.tipo === 'credito') totalCredito += e.monto;
-    else totalDebito += e.monto;
+    if (e.tipo === 'credito') {
+      totalCredito += e.monto;
+      creditoCount++;
+    } else {
+      totalDebito += e.monto;
+      debitoCount++;
+    }
     porNombre.set(e.nombre, (porNombre.get(e.nombre) ?? 0) + signo(e));
   }
 
@@ -220,16 +236,18 @@ export function kpis(entradas: Entrada[]): Kpis {
   }
 
   let variacion: number | null = null;
-  let variacionMeses = 3;
-  if (serie.length >= 4) {
-    variacion = serie[serie.length - 1].saldo - serie[serie.length - 4].saldo;
-  } else if (serie.length >= 2) {
-    variacion = serie[serie.length - 1].saldo - serie[serie.length - 2].saldo;
-    variacionMeses = 1;
+  let variacionMeses = 1;
+  if (serie.length >= 2) {
+    const p = Math.max(1, Math.min(6, periodo));
+    const ventana = Math.min(p, serie.length - 1);
+    variacion = serie[serie.length - 1].saldo - serie[serie.length - 1 - ventana].saldo;
+    variacionMeses = ventana;
   }
 
+  const saldoActual = serie.length > 0 ? serie[serie.length - 1].saldo : 0;
+
   return {
-    saldoActual: serie.length > 0 ? serie[serie.length - 1].saldo : 0,
+    saldoActual,
     totalCredito,
     totalDebito,
     variacion,
@@ -240,6 +258,16 @@ export function kpis(entradas: Entrada[]): Kpis {
     pico,
     picoEtiqueta,
     porcentajePagado,
+    creditoCount,
+    debitoCount,
+    meses: serie.length,
+    promedioCreditoMes: serie.length > 0 ? totalCredito / serie.length : null,
+    pctRestante: porcentajePagado !== null ? 100 - porcentajePagado : null,
+    pctBajoPico:
+      pico !== null && pico > 0 && saldoActual < pico ? ((saldoActual - pico) / pico) * 100 : null,
+    saldoPrevio: variacion !== null ? saldoActual - variacion : null,
+    topPct: saldoActual > 0 && topMonto > 0 ? (topMonto / saldoActual) * 100 : null,
+    desdeEtiqueta: serie.length > 0 ? serie[0].etiqueta : null,
   };
 }
 
