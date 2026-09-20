@@ -254,7 +254,8 @@ export function kpis(entradas: Entrada[], periodo = 3): Kpis {
     porcentajePagado,
     creditoCount,
     debitoCount,
-    pctRestante: porcentajePagado !== null ? 100 - porcentajePagado : null,
+    pctRestante:
+      porcentajePagado !== null ? Math.max(0, 100 - porcentajePagado) : null,
     pctBajoPico:
       pico !== null && pico > 0 && saldoActual < pico ? ((saldoActual - pico) / pico) * 100 : null,
     saldoPrevio: variacion !== null ? saldoActual - variacion : null,
@@ -285,7 +286,15 @@ function etiquetaMes(fecha: number): string {
 export function resumenPorConcepto(entradas: Entrada[]): ResumenConcepto[] {
   const porNombre = new Map<
     string,
-    { color: string; saldo: number; credito: number; debito: number; desde: number; hasta: number }
+    {
+      color: string;
+      saldo: number;
+      credito: number;
+      debito: number;
+      desde: number;
+      hasta: number;
+      meses: Set<number>;
+    }
   >();
 
   for (const e of entradas) {
@@ -296,6 +305,7 @@ export function resumenPorConcepto(entradas: Entrada[]): ResumenConcepto[] {
       if (e.tipo === 'credito') prev.credito += e.monto;
       else prev.debito += e.monto;
       prev.color = e.color;
+      prev.meses.add(fecha);
       if (fecha < prev.desde) prev.desde = fecha;
       if (fecha > prev.hasta) prev.hasta = fecha;
     } else {
@@ -306,6 +316,7 @@ export function resumenPorConcepto(entradas: Entrada[]): ResumenConcepto[] {
         debito: e.tipo === 'debito' ? e.monto : 0,
         desde: fecha,
         hasta: fecha,
+        meses: new Set([fecha]),
       });
     }
   }
@@ -320,7 +331,7 @@ export function resumenPorConcepto(entradas: Entrada[]): ResumenConcepto[] {
     porcentajeRestante: d.credito > 0 ? (d.saldo / d.credito) * 100 : null,
     desde: etiquetaMes(d.desde),
     ultimoMes: etiquetaMes(d.hasta),
-    mesesActivo: d.hasta - d.desde + 1,
+    mesesActivo: d.meses.size,
   }));
 
   const sumaPositivos = lista.reduce((s, r) => s + (r.saldo > 0 ? r.saldo : 0), 0);

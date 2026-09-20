@@ -3,6 +3,16 @@ import { colorPorNombre, normalizarColores } from './calc';
 
 const KEY = 'deudash.entradas.v1';
 
+export function uuid(): string {
+  const c = globalThis.crypto;
+  if (typeof c?.randomUUID === 'function') return c.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
+    const r = (Math.random() * 16) | 0;
+    const v = ch === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export function esValida(v: unknown): v is Entrada {
   if (typeof v !== 'object' || v === null) return false;
   const e = v as Record<string, unknown>;
@@ -48,7 +58,11 @@ export function cargarEntradas(): Entrada[] {
 }
 
 export function guardarEntradas(entradas: Entrada[]): void {
-  localStorage.setItem(KEY, JSON.stringify(entradas));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(entradas));
+  } catch {
+    // storage lleno o bloqueado: no romper la app
+  }
 }
 
 export function exportarJSON(entradas: Entrada[]): void {
@@ -81,7 +95,7 @@ export function entradasEjemplo(): Entrada[] {
     visible = true,
     color?: string
   ): Entrada => ({
-    id: crypto.randomUUID(),
+    id: uuid(),
     nombre,
     monto,
     tipo,

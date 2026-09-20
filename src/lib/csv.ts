@@ -1,5 +1,5 @@
 import type { Entrada } from '../types';
-import { esValida, normalizar } from './store';
+import { esValida, normalizar, uuid } from './store';
 import { normalizarColores, parsearMonto } from './calc';
 
 function celdaCsv(valor: string): string {
@@ -105,7 +105,7 @@ export function importarCSV(archivo: File): Promise<Entrada[]> {
       const visible = !(visRaw === 'false' || visRaw === '0');
 
       const candidata: Entrada = {
-        id: tomar('id') || crypto.randomUUID(),
+        id: tomar('id') || uuid(),
         nombre,
         monto,
         tipo,

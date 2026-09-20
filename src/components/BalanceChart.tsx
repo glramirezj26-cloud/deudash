@@ -110,6 +110,11 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
   const chartRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const esTouch = useMemo(() => window.matchMedia('(any-hover: none)').matches, []);
+  const visibles = entradas.filter((e) => e.visible);
+
+  useEffect(() => {
+    setPuntoActivo(null);
+  }, [vista, visibles.length]);
 
   const medirBurbuja = useCallback(() => {
     const cont = scrollRef.current;
@@ -151,7 +156,6 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
     );
   }
 
-  const visibles = entradas.filter((e) => e.visible);
   const totalSerie = serieTotal(visibles);
   const deudas = seriePorDeuda(visibles);
   const colorTotal = totalSerie.length > 0 && totalSerie[totalSerie.length - 1].saldo > 0 ? cssVar('--credit') : cssVar('--debit');
@@ -284,7 +288,10 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
               key={c.nombre}
               type="button"
               className={`item-deuda ${c.visible ? '' : 'oculto'}`}
-              onClick={() => onToggleConcepto(c.nombre)}
+              onClick={() => {
+                setPuntoActivo(null);
+                onToggleConcepto(c.nombre);
+              }}
               title={`${c.visible ? 'Ocultar' : 'Mostrar'} ${c.nombre} en el gráfico`}
             >
               <span className="dot" style={{ background: c.color }}></span>

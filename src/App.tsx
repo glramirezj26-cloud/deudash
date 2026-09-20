@@ -6,6 +6,7 @@ import {
   guardarEntradas,
   importarJSON,
   primerArranque,
+  uuid,
 } from './lib/store';
 import { importarCSV as importarCSVArchivo } from './lib/csv';
 import EntryForm from './components/EntryForm';
@@ -50,13 +51,13 @@ function App() {
       setEditando(null);
       return;
     }
-    const nuevas = lista.map((d) => ({ ...d, id: crypto.randomUUID(), visible: true }));
+    const nuevas = lista.map((d) => ({ ...d, id: uuid(), visible: true }));
     setEntradas((prev) => [...prev, ...nuevas]);
     if (nuevas.length > 1) setToast({ tipo: 'ok', texto: `${nuevas.length} entradas creadas` });
   };
 
   const duplicar = (e: Entrada) => {
-    setEntradas((prev) => [...prev, { ...e, id: crypto.randomUUID() }]);
+    setEntradas((prev) => [...prev, { ...e, id: uuid() }]);
   };
 
   const eliminar = (id: string) => {

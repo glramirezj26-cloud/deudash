@@ -100,8 +100,8 @@ export default function Composicion({ entradas, onRecolor, onEliminarConcepto }:
                 <th className="col-monto">Abonado</th>
                 <th title="Desde cuándo la tenés">Desde</th>
                 <th>Último mov.</th>
-                <th title="Indica si la deuda está activa">
-                  Activo
+                <th title="Meses con al menos una entrada">
+                  Meses act.
                 </th>
                 <th className="col-acciones" title="Elimina la deuda y todos sus movimientos">Eliminar</th>
               </tr>
@@ -177,7 +177,7 @@ export default function Composicion({ entradas, onRecolor, onEliminarConcepto }:
                 <td>Total</td>
                 <td className="col-monto monto-pendiente">{fmt(saldoTotal)}</td>
                 <td className="col-monto"></td>
-                <td className="col-monto">100 %</td>
+                <td className="col-monto">{fmtPct(resumen.reduce((s, r) => s + r.porciento, 0))}</td>
                 <td className="col-monto monto-credito">{fmt(cargadoTotal)}</td>
                 <td className="col-monto monto-debito">{fmt(abonadoTotal)}</td>
                 <td colSpan={4}></td>
