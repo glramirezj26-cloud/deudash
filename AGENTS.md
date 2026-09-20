@@ -37,5 +37,6 @@
 - Recharts v3: los tooltips custom se pasan como elementos (`content={<TooltipX />}`); si `data` es un union type hay que castearlo (`data as Array<Record<string, unknown>>`) o falla el typecheck.
 - El monto se ingresa con coma decimal: `parseFloat(monto.replace(',', '.'))`.
 - "Limpiar todo" pide confirmación con doble click: el primer click arma la acción (estado `armado`) y hay ~3,5s antes de que se desarme (App.tsx).
+- Decisiones de confirmación por nivel de riesgo (NO es inconsistencia): eliminar **una** entrada usa `window.confirm`; "Limpiar todo" y "Cargar ejemplo" (destruyen todo el estado) usan doble-click con `armado`. Mantener ese criterio.
 - La tabla de movimientos se ordena por fecha descendente (más reciente arriba, EntryTable.tsx).
 - Primer arranque carga datos de ejemplo (`entradasEjemplo()`) solo si la clave de localStorage no existe.

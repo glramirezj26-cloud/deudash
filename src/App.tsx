@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import type { Entrada } from './types';
 import {
   cargarEntradas,
@@ -12,9 +13,10 @@ import { importarCSV as importarCSVArchivo } from './lib/csv';
 import EntryForm from './components/EntryForm';
 import EntryTable from './components/EntryTable';
 import StatsCards from './components/StatsCards';
-import BalanceChart from './components/BalanceChart';
-import Composicion from './components/Composicion';
 import HeaderMenu from './components/HeaderMenu';
+
+const BalanceChart = lazy(() => import('./components/BalanceChart'));
+const Composicion = lazy(() => import('./components/Composicion'));
 
 type Toast = { tipo: 'ok' | 'err'; texto: string } | null;
 
@@ -98,7 +100,7 @@ function App() {
     if (editando?.nombre.toLowerCase() === nombre.toLowerCase()) setEditando(null);
   };
 
-  const importar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const importar = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     try {
@@ -113,7 +115,7 @@ function App() {
     }
   };
 
-  const importarCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const importarCsv = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     try {
@@ -171,12 +173,14 @@ function App() {
       </header>
 
       <StatsCards entradas={entradas.filter((e) => e.visible)} />
-      <BalanceChart entradas={entradas} onToggleConcepto={toggleConcepto} />
-      <Composicion
-        entradas={entradas.filter((e) => e.visible)}
-        onRecolor={recolorear}
-        onEliminarConcepto={eliminarConcepto}
-      />
+      <Suspense fallback={<div className="tarjeta"><p className="vacio">Cargando gráficos…</p></div>}>
+        <BalanceChart entradas={entradas} onToggleConcepto={toggleConcepto} />
+        <Composicion
+          entradas={entradas.filter((e) => e.visible)}
+          onRecolor={recolorear}
+          onEliminarConcepto={eliminarConcepto}
+        />
+      </Suspense>
 
       <div className="columnas">
         <EntryForm entradas={entradas} editando={editando} alGuardar={agregar} alCancelar={() => setEditando(null)} />

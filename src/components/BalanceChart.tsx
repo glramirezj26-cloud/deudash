@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -20,6 +21,8 @@ interface Props {
 
 type Vista = 'deuda' | 'total';
 
+const PIN_MS = 3000;
+
 function compact(n: number): string {
   const abs = Math.abs(n);
   if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -31,12 +34,10 @@ function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-function TooltipGrafico({ active, payload }: { active?: boolean; payload?: Array<{ payload: PuntoSerie }> }) {
-  if (!active || !payload || payload.length === 0) return null;
-  const punto = payload[0].payload;
+function ContenidoTotal({ punto }: { punto: PuntoSerie }) {
   return (
     <div className="tooltip-chart">
-      <div className="tooltip-titulo">{punto.clave}</div>
+      <div className="tooltip-titulo">{punto.etiqueta}</div>
       <div className="tooltip-saldo">Saldo: {fmt(punto.saldo)}</div>
       <div className={punto.neto > 0 ? 'monto-credito' : punto.neto < 0 ? 'monto-debito' : ''}>
         Neto: {fmtFirmado(punto.neto)}
@@ -45,53 +46,14 @@ function TooltipGrafico({ active, payload }: { active?: boolean; payload?: Array
   );
 }
 
-function TooltipDeuda({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: Array<{ name?: string | number; value?: string | number; payload?: { etiqueta?: string } }>;
-}) {
-  if (!active || !payload) return null;
-  const filas = payload.filter(
-    (p): p is { name: string; value: number; payload?: { etiqueta?: string } } =>
-      typeof p.value === 'number' && typeof p.name === 'string'
-  );
-  if (filas.length === 0) return null;
-  return (
-    <div className="tooltip-chart">
-      <div className="tooltip-titulo">{filas[0].payload?.etiqueta ?? ''}</div>
-      {filas.map((f) => (
-        <div key={f.name} className="tooltip-item">
-          <span>{f.name}</span>
-          <span>{fmt(f.value)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function BubblePunto({ vista, fila }: { vista: Vista; fila: PuntoSerie | Record<string, string | number> }) {
-  if (vista === 'total') {
-    const p = fila as PuntoSerie;
-    return (
-      <div className="tooltip-chart">
-        <div className="tooltip-titulo">{p.etiqueta}</div>
-        <div className="tooltip-saldo">Saldo: {fmt(p.saldo)}</div>
-        <div className={p.neto > 0 ? 'monto-credito' : p.neto < 0 ? 'monto-debito' : ''}>
-          Neto: {fmtFirmado(p.neto)}
-        </div>
-      </div>
-    );
-  }
-  const filaRec = fila as Record<string, string | number>;
+function ContenidoDeuda({ fila }: { fila: Record<string, string | number> }) {
   const items: Array<[string, number]> = [];
-  for (const [k, v] of Object.entries(filaRec)) {
+  for (const [k, v] of Object.entries(fila)) {
     if (k !== 'clave' && k !== 'etiqueta' && typeof v === 'number') items.push([k, v]);
   }
   return (
     <div className="tooltip-chart">
-      <div className="tooltip-titulo">{String(filaRec.etiqueta ?? '')}</div>
+      <div className="tooltip-titulo">{String(fila.etiqueta ?? '')}</div>
       {items.map(([nombre, valor]) => (
         <div key={nombre} className="tooltip-item">
           <span>{nombre}</span>
@@ -102,6 +64,31 @@ function BubblePunto({ vista, fila }: { vista: Vista; fila: PuntoSerie | Record<
   );
 }
 
+function TooltipGrafico({ active, payload }: { active?: boolean; payload?: Array<{ payload: PuntoSerie }> }) {
+  if (!active || !payload || payload.length === 0) return null;
+  const punto = payload[0]?.payload;
+  if (!punto) return null;
+  return <ContenidoTotal punto={punto} />;
+}
+
+function TooltipDeuda({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload?: Record<string, string | number> }>;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  const fila = payload[0]?.payload;
+  if (!fila) return null;
+  return <ContenidoDeuda fila={fila} />;
+}
+
+function BubblePunto({ vista, fila }: { vista: Vista; fila: PuntoSerie | Record<string, string | number> }) {
+  if (vista === 'total') return <ContenidoTotal punto={fila as PuntoSerie} />;
+  return <ContenidoDeuda fila={fila as Record<string, string | number>} />;
+}
+
 export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
   const [vista, setVista] = useState<Vista>('deuda');
   const [puntoActivo, setPuntoActivo] = useState<{ xp: number; yp: number; indice: number } | null>(null);
@@ -109,12 +96,22 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const pinTimerRef = useRef<number | null>(null);
   const esTouch = useMemo(() => window.matchMedia('(any-hover: none)').matches, []);
   const visibles = entradas.filter((e) => e.visible);
 
   useEffect(() => {
+    if (pinTimerRef.current !== null) window.clearTimeout(pinTimerRef.current);
+    pinTimerRef.current = null;
     setPuntoActivo(null);
   }, [vista, visibles.length]);
+
+  useEffect(
+    () => () => {
+      if (pinTimerRef.current !== null) window.clearTimeout(pinTimerRef.current);
+    },
+    []
+  );
 
   const medirBurbuja = useCallback(() => {
     const cont = scrollRef.current;
@@ -158,7 +155,8 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
 
   const totalSerie = serieTotal(visibles);
   const deudas = seriePorDeuda(visibles);
-  const colorTotal = totalSerie.length > 0 && totalSerie[totalSerie.length - 1].saldo > 0 ? cssVar('--credit') : cssVar('--debit');
+  const ultimo = totalSerie[totalSerie.length - 1];
+  const colorTotal = ultimo && ultimo.saldo > 0 ? cssVar('--credit') : cssVar('--debit');
 
   let picoPunto: PuntoSerie | null = null;
   for (const p of totalSerie) {
@@ -199,11 +197,10 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
 
   const manejarTap = (
     estado: { activeIndex?: number | string | null; activeCoordinate?: { x?: number; y?: number } } | null,
-    e: React.MouseEvent
+    e: MouseEvent
   ) => {
     const scrollRect = scrollRef.current?.getBoundingClientRect();
-    const contentRect = chartRef.current?.getBoundingClientRect();
-    if (!scrollRect || !contentRect) {
+    if (!scrollRect) {
       setPuntoActivo(null);
       return;
     }
@@ -217,8 +214,13 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
     }
 
     if (indice === null) {
-      const x = e.clientX - contentRect.left;
-      const plotW = contentRect.width - 48 - 10;
+      const rect = chartRef.current?.getBoundingClientRect();
+      if (!rect) {
+        setPuntoActivo(null);
+        return;
+      }
+      const x = e.clientX - rect.left;
+      const plotW = rect.width - 48 - 10;
       const n = data.length;
       if (n === 1) indice = 0;
       else if (plotW > 0 && n > 1) {
@@ -227,37 +229,50 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
       }
     }
 
-    if (indice === null || indice >= data.length) {
+    if (indice === null || indice >= data.length || indice < 0) {
+      if (pinTimerRef.current !== null) window.clearTimeout(pinTimerRef.current);
+      pinTimerRef.current = null;
       setPuntoActivo(null);
       return;
     }
 
-    const coordenadas = () => {
-      const coord = estado?.activeCoordinate;
-      if (
-        coord &&
-        typeof coord.x === 'number' &&
-        typeof coord.y === 'number' &&
-        Number.isFinite(coord.x) &&
-        Number.isFinite(coord.y)
-      ) {
-        return {
-          xp: contentRect.left + coord.x - scrollRect.left,
-          yp: contentRect.top + coord.y - scrollRect.top,
-        };
-      }
-      const scrollLeft = contentRect.left - scrollRect.left;
-      const plotW = contentRect.width - 48 - 10;
-      const n = data.length;
-      const centroX = plotW > 0 && n > 1 ? 48 + (plotW / (n - 1)) * indice : 48 + plotW / 2;
-      return { xp: centroX - scrollLeft, yp: e.clientY - scrollRect.top };
-    };
-    const { xp, yp } = coordenadas();
+    const coord = estado?.activeCoordinate;
 
-    setPuntoActivo((prev) =>
-      prev && prev.indice === indice ? null : { indice, xp, yp }
-    );
+    let xp: number;
+    let yp: number;
+    if (
+      coord &&
+      typeof coord.x === 'number' &&
+      Number.isFinite(coord.x) &&
+      typeof coord.y === 'number' &&
+      Number.isFinite(coord.y)
+    ) {
+      xp = coord.x;
+      yp = coord.y;
+    } else {
+      const rect = chartRef.current?.getBoundingClientRect();
+      const plotW = rect ? rect.width - 48 - 10 : 0;
+      const n = data.length;
+      xp = plotW > 0 && n > 1 ? 48 + (plotW / (n - 1)) * indice : 48 + plotW / 2;
+      yp = e.clientY - scrollRect.top;
+    }
+
+    if (pinTimerRef.current !== null) window.clearTimeout(pinTimerRef.current);
+    pinTimerRef.current = null;
+
+    if (puntoActivo && puntoActivo.indice === indice) {
+      setPuntoActivo(null);
+      return;
+    }
+
+    setPuntoActivo({ indice, xp, yp });
+    pinTimerRef.current = window.setTimeout(() => setPuntoActivo(null), PIN_MS);
   };
+
+  const filaBurbuja =
+    puntoActivo && puntoActivo.indice >= 0 && puntoActivo.indice < data.length
+      ? data[puntoActivo.indice]
+      : null;
 
   return (
     <div className="tarjeta grafico">
@@ -325,7 +340,7 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
             width={48}
           />
           <Tooltip
-            content={esTouch ? () => null : vista === 'deuda' ? <TooltipDeuda /> : <TooltipGrafico />}
+            content={esTouch || puntoActivo ? () => null : vista === 'deuda' ? <TooltipDeuda /> : <TooltipGrafico />}
             cursor={esTouch ? false : { stroke: cssVar('--chart-line') }}
           />
           <ReferenceLine y={0} stroke={cssVar('--chart-line')} />
@@ -373,13 +388,13 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
         </LineChart>
         </ResponsiveContainer>
           </div>
-          {puntoActivo && puntoActivo.indice >= 0 && puntoActivo.indice < data.length && (
+          {puntoActivo && filaBurbuja && (
             <div
               ref={bubbleRef}
               className="bubble-punto"
               style={posicion ? { left: posicion.left, top: posicion.top } : { visibility: 'hidden' }}
             >
-              <BubblePunto vista={vista} fila={data[puntoActivo.indice]} />
+              <BubblePunto vista={vista} fila={filaBurbuja} />
             </div>
           )}
         </div>

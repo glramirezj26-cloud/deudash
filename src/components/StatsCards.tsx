@@ -79,6 +79,11 @@ export default function StatsCards({ entradas }: Props) {
             </button>
           ))}
         </span>
+        {s.variacionMeses !== null && s.variacionMeses < periodo && (
+          <span className="nota">
+            Solo {s.variacionMeses} {s.variacionMeses === 1 ? 'mes' : 'meses'} de historial
+          </span>
+        )}
       </div>
       <div className="kpi">
         <span className="label">Pico histórico</span>

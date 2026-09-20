@@ -17,7 +17,7 @@ export const PALETA = [
 export function colorPorNombre(nombre: string): string {
   let h = 0;
   for (let i = 0; i < nombre.length; i++) h = (h * 31 + nombre.charCodeAt(i)) >>> 0;
-  return PALETA[h % PALETA.length];
+  return PALETA[h % PALETA.length]!;
 }
 
 export function normalizarColores(entradas: Entrada[]): Entrada[] {
@@ -32,7 +32,7 @@ export function normalizarColores(entradas: Entrada[]): Entrada[] {
   const asignados = new Map<string, string>();
   const canonicos = new Map<string, string>();
   for (const [clave, lista] of porNombre) {
-    const nombre = lista[0].nombre;
+    const nombre = lista[0]!.nombre;
     const actual = lista.find((e) => PALETA.includes(e.color))?.color;
     let color = actual && !usados.has(actual) ? actual : null;
     if (!color) {
@@ -49,7 +49,7 @@ export function normalizarColores(entradas: Entrada[]): Entrada[] {
   });
 }
 
-export function signo(e: Entrada): number {
+function signo(e: Entrada): number {
   return e.tipo === 'credito' ? e.monto : -e.monto;
 }
 
@@ -103,13 +103,12 @@ export interface PuntoSerie {
   etiqueta: string;
   saldo: number;
   neto: number;
-  entradas: Entrada[];
 }
 
 function generarSerie(entradas: Entrada[], desde: FechaMes): PuntoSerie[] {
   const ord = [...entradas].sort((a, b) => a.anio - b.anio || a.mes - b.mes);
   if (ord.length === 0) return [];
-  const hasta = ord[ord.length - 1];
+  const hasta = ord[ord.length - 1]!;
   const puntos: PuntoSerie[] = [];
   let saldo = 0;
   let idx = 0;
@@ -117,9 +116,11 @@ function generarSerie(entradas: Entrada[], desde: FechaMes): PuntoSerie[] {
 
   while (cur.anio < hasta.anio || (cur.anio === hasta.anio && cur.mes <= hasta.mes)) {
     const entradasMes: Entrada[] = [];
-    while (idx < ord.length && ord[idx].anio === cur.anio && ord[idx].mes === cur.mes) {
-      entradasMes.push(ord[idx]);
-      saldo += signo(ord[idx]);
+    while (idx < ord.length) {
+      const actual = ord[idx]!;
+      if (actual.anio !== cur.anio || actual.mes !== cur.mes) break;
+      entradasMes.push(actual);
+      saldo += signo(actual);
       idx++;
     }
     puntos.push({
@@ -127,7 +128,6 @@ function generarSerie(entradas: Entrada[], desde: FechaMes): PuntoSerie[] {
       etiqueta: `${MES_CORTO[cur.mes - 1]} ${String(cur.anio).slice(2)}`,
       saldo,
       neto: entradasMes.reduce((s, e) => s + signo(e), 0),
-      entradas: entradasMes,
     });
     cur = sumarMeses(cur, 1);
   }
@@ -165,7 +165,7 @@ export function seriePorDeuda(entradas: Entrada[]): SerieDeuda[] {
     const primero = primeraEntrada(lista);
     deudas.push({
       nombre,
-      color: lista[lista.length - 1].color,
+      color: lista[lista.length - 1]!.color,
       puntos: generarSerie(lista, sumarMeses({ anio: primero.anio, mes: primero.mes }, -1)),
     });
   }
@@ -177,6 +177,7 @@ export interface Kpis {
   totalCredito: number;
   totalDebito: number;
   variacion: number | null;
+  variacionMeses: number | null;
   topNombre: string | null;
   topMonto: number;
   cantidad: number;
@@ -192,23 +193,41 @@ export interface Kpis {
   desdeEtiqueta: string | null;
 }
 
+export interface ResumenMovimientos {
+  cantidad: number;
+  creditoCount: number;
+  debitoCount: number;
+  desdeEtiqueta: string | null;
+}
+
+export function resumenMovimientos(entradas: Entrada[]): ResumenMovimientos {
+  let creditoCount = 0;
+  let debitoCount = 0;
+  let minFecha = Infinity;
+  for (const e of entradas) {
+    if (e.tipo === 'credito') creditoCount++;
+    else debitoCount++;
+    minFecha = Math.min(minFecha, e.anio * 12 + e.mes);
+  }
+  return {
+    cantidad: entradas.length,
+    creditoCount,
+    debitoCount,
+    desdeEtiqueta: Number.isFinite(minFecha) ? etiquetaMes(minFecha) : null,
+  };
+}
+
 export function kpis(entradas: Entrada[], periodo = 3): Kpis {
   const serie = serieTemporal(entradas);
+  const mov = resumenMovimientos(entradas);
 
   let totalCredito = 0;
   let totalDebito = 0;
-  let creditoCount = 0;
-  let debitoCount = 0;
   const porNombre = new Map<string, number>();
 
   for (const e of entradas) {
-    if (e.tipo === 'credito') {
-      totalCredito += e.monto;
-      creditoCount++;
-    } else {
-      totalDebito += e.monto;
-      debitoCount++;
-    }
+    if (e.tipo === 'credito') totalCredito += e.monto;
+    else totalDebito += e.monto;
     porNombre.set(e.nombre, (porNombre.get(e.nombre) ?? 0) + signo(e));
   }
 
@@ -233,34 +252,37 @@ export function kpis(entradas: Entrada[], periodo = 3): Kpis {
   }
 
   let variacion: number | null = null;
+  let variacionMeses: number | null = null;
   if (serie.length >= 2) {
     const p = Math.max(1, Math.min(6, periodo));
     const ventana = Math.min(p, serie.length - 1);
-    variacion = serie[serie.length - 1].saldo - serie[serie.length - 1 - ventana].saldo;
+    variacion = serie[serie.length - 1]!.saldo - serie[serie.length - 1 - ventana]!.saldo;
+    variacionMeses = ventana;
   }
 
-  const saldoActual = serie.length > 0 ? serie[serie.length - 1].saldo : 0;
+  const saldoActual = serie.length > 0 ? serie[serie.length - 1]!.saldo : 0;
 
   return {
     saldoActual,
     totalCredito,
     totalDebito,
     variacion,
+    variacionMeses,
     topNombre,
     topMonto,
-    cantidad: entradas.length,
+    cantidad: mov.cantidad,
     pico,
     picoEtiqueta,
     porcentajePagado,
-    creditoCount,
-    debitoCount,
+    creditoCount: mov.creditoCount,
+    debitoCount: mov.debitoCount,
     pctRestante:
       porcentajePagado !== null ? Math.max(0, 100 - porcentajePagado) : null,
     pctBajoPico:
       pico !== null && pico > 0 && saldoActual < pico ? ((saldoActual - pico) / pico) * 100 : null,
     saldoPrevio: variacion !== null ? saldoActual - variacion : null,
     topPct: saldoActual > 0 && topMonto > 0 ? (topMonto / saldoActual) * 100 : null,
-    desdeEtiqueta: serie.length > 0 ? serie[0].etiqueta : null,
+    desdeEtiqueta: mov.desdeEtiqueta,
   };
 }
 

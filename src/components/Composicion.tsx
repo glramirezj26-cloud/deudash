@@ -11,7 +11,7 @@ interface Props {
 
 function TooltipTorta({ active, payload }: { active?: boolean; payload?: Array<{ payload?: ResumenConcepto }> }) {
   if (!active || !payload || payload.length === 0) return null;
-  const d = payload[0].payload;
+  const d = payload[0]?.payload;
   if (!d) return null;
   return (
     <div className="tooltip-chart">

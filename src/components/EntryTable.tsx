@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Entrada } from '../types';
-import { fmt, kpis, MES_CORTO, nombreCorto } from '../lib/calc';
+import { fmt, MES_CORTO, nombreCorto, resumenMovimientos } from '../lib/calc';
 
 type Clave = 'nombre' | 'fecha' | 'tipo' | 'monto';
 
@@ -42,7 +42,7 @@ export default function EntryTable({ entradas, onToggle, onToggleAll, onEditar, 
   });
   const ocultas = entradas.filter((e) => !e.visible).length;
   const todasVisibles = entradas.length > 0 && ocultas === 0;
-  const r = kpis(entradas);
+  const r = resumenMovimientos(entradas);
 
   const cambiarOrden = (clave: Clave) => {
     setSort((prev) =>

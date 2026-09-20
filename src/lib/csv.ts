@@ -31,7 +31,7 @@ export function exportarCSV(entradas: Entrada[]): void {
   a.href = url;
   a.download = `deudash-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function dividir(linea: string, sep: string): string[] {
@@ -69,16 +69,16 @@ export function importarCSV(archivo: File): Promise<Entrada[]> {
     const lineas = texto.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim().length > 0);
     if (lineas.length < 2) throw new Error('El archivo no tiene un formato válido');
 
-    const sep = lineas[1].includes(';') ? ';' : ',';
-    const header = dividir(lineas[0], sep).map((h) => h.trim().toLowerCase());
+    const sep = lineas[1]!.includes(';') ? ';' : ',';
+    const header = dividir(lineas[0]!, sep).map((h) => h.trim().toLowerCase());
     const indiceDe = (nombre: string) => header.indexOf(nombre);
 
     const validas: Entrada[] = [];
     for (let i = 1; i < lineas.length; i++) {
-      const celdas = dividir(lineas[i], sep);
+      const celdas = dividir(lineas[i]!, sep);
       const tomar = (nombre: string): string | undefined => {
         const j = indiceDe(nombre);
-        return j >= 0 && j < celdas.length ? celdas[j].trim() : undefined;
+        return j >= 0 && j < celdas.length ? celdas[j]?.trim() : undefined;
       };
 
       const nombre = tomar('nombre');
@@ -105,7 +105,7 @@ export function importarCSV(archivo: File): Promise<Entrada[]> {
       const visible = !(visRaw === 'false' || visRaw === '0');
 
       const candidata: Entrada = {
-        id: tomar('id') || uuid(),
+        id: uuid(),
         nombre,
         monto,
         tipo,

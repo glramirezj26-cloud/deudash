@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import type { Entrada } from '../types';
 import { exportarJSON } from '../lib/store';
 import { exportarCSV } from '../lib/csv';
@@ -9,8 +10,8 @@ interface Props {
   armadoEjemplo: boolean;
   onLimpiar: () => void;
   onCargarEjemplo: () => void;
-  onImportarJSON: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onImportarCSV: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onImportarJSON: (e: ChangeEvent<HTMLInputElement>) => void;
+  onImportarCSV: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 export default function HeaderMenu({

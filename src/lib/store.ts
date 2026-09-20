@@ -79,7 +79,9 @@ export function importarJSON(archivo: File): Promise<Entrada[]> {
   return archivo.text().then((texto) => {
     const parsed: unknown = JSON.parse(texto);
     if (!Array.isArray(parsed)) throw new Error('El archivo no tiene un formato válido');
-    const validas = normalizarColores(parsed.filter(esValida).map(normalizar));
+    const validas = normalizarColores(
+      parsed.filter(esValida).map((e) => ({ ...normalizar(e), id: uuid() }))
+    );
     if (validas.length === 0) throw new Error('No se encontraron entradas válidas en el archivo');
     return validas;
   });

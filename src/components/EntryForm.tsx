@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import type { Entrada, Tipo } from '../types';
 import { NOMBRES_MES, PALETA, parsearMonto } from '../lib/calc';
 
@@ -16,7 +17,7 @@ export default function EntryForm({ entradas, editando, alGuardar, alCancelar }:
   const [tipo, setTipo] = useState<Tipo>('credito');
   const [mes, setMes] = useState(hoy.getMonth() + 1);
   const [anio, setAnio] = useState(hoy.getFullYear());
-  const [color, setColor] = useState(PALETA[0]);
+  const [color, setColor] = useState<string>(PALETA[0]!);
   const [error, setError] = useState<string | null>(null);
   const [mostrarConceptos, setMostrarConceptos] = useState(false);
   const [hasta, setHasta] = useState<{ mes: number; anio: number } | null>(null);
@@ -47,7 +48,9 @@ export default function EntryForm({ entradas, editando, alGuardar, alCancelar }:
   const conceptoExistente = otrasEntradas.find((e) => e.nombre.toLowerCase() === nombreNorm);
   const colorBloqueado = Boolean(conceptoExistente);
 
-  const anios = Array.from({ length: 11 }, (_, i) => hoy.getFullYear() - 8 + i);
+  const anios = Array.from(
+    new Set([...Array.from({ length: 11 }, (_, i) => hoy.getFullYear() - 8 + i), ...(editando ? [editando.anio] : [])])
+  ).sort((a, b) => a - b);
 
   const claveEditada = editando?.nombre.toLowerCase() ?? '';
   const coloresUsados = new Set(
@@ -77,7 +80,7 @@ export default function EntryForm({ entradas, editando, alGuardar, alCancelar }:
     setMostrarConceptos(false);
   };
 
-  const enviar = (e: React.FormEvent) => {
+  const enviar = (e: FormEvent) => {
     e.preventDefault();
     const m = parsearMonto(monto);
     if (!nombre.trim()) {
@@ -112,7 +115,7 @@ export default function EntryForm({ entradas, editando, alGuardar, alCancelar }:
     setNombre('');
     setMonto('');
     setTipo('credito');
-    setColor(PALETA[0]);
+    setColor(PALETA[0]!);
     setHasta(null);
   };
 
@@ -167,6 +170,7 @@ export default function EntryForm({ entradas, editando, alGuardar, alCancelar }:
           onChange={(e) => setMonto(e.target.value)}
           placeholder="0,00"
         />
+        <span className="nota">Decimales con coma y punto para miles (ej: 1.500,75)</span>
       </div>
 
       <div className="campo">

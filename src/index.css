@@ -425,14 +425,6 @@ button.peligro.armado:hover {
   }
 }
 
-@supports (text-fit: shrink) {
-  @media (max-width: 767px) {
-    .kpi .valor {
-      letter-spacing: 0;
-    }
-  }
-}
-
 .monto-credito {
   color: var(--credit);
 }
@@ -468,6 +460,12 @@ button.peligro.armado:hover {
   position: absolute;
   z-index: 45;
   pointer-events: none;
+}
+
+.bubble-punto .tooltip-chart {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-pop));
+  box-shadow: var(--shadow-elevated), 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 @media (max-width: 767px) {
@@ -798,10 +796,6 @@ button.peligro.armado:hover {
 
 /* Formulario */
 
-form h2 {
-  margin-bottom: 12px;
-}
-
 .campo {
   display: flex;
   flex-direction: column;
@@ -1120,6 +1114,7 @@ input[type='checkbox'] {
   z-index: 50;
   background: var(--btn-bg);
   border: 1px solid var(--border);
+  animation: toast-in 0.25s ease-out;
 }
 
 .toast-ok {
@@ -1166,8 +1161,4 @@ select {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
-}
-
-.toast {
-  animation: toast-in 0.25s ease-out;
 }
