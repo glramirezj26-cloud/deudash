@@ -72,19 +72,10 @@ body {
     text-align: left;
   }
 
-  .acciones {
-    display: flex;
-    flex-wrap: wrap;
-    width: auto;
-  }
-
-  .acciones > * {
-    min-width: auto;
-  }
-
-  .acciones .btn-confirmar {
-    min-width: 200px;
-    white-space: nowrap;
+  .menu-acciones-drop {
+    left: auto;
+    right: 0;
+    min-width: 220px;
   }
 }
 
@@ -113,15 +104,73 @@ h2 {
   font-size: calc(var(--fs-body) * 1.3);
 }
 
-.acciones {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 100%;
-  gap: 8px;
+/* Menú de acciones */
+
+.menu-acciones {
+  position: relative;
+  min-width: 0;
 }
 
-.acciones > * {
-  min-width: 0;
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.menu-toggle .chevron {
+  display: inline-block;
+  font-size: 0.8em;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+
+.menu-toggle .chevron.abierto {
+  transform: rotate(180deg);
+}
+
+.menu-acciones-drop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--surface-pop);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: var(--shadow-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-acciones-drop button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: var(--fs-body);
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menu-acciones-drop button:hover {
+  background: var(--surface-hover);
+}
+
+.menu-acciones-drop button.peligro.armado {
+  background: var(--error);
+  color: var(--text-on-error);
+  font-weight: 700;
+}
+
+.menu-acciones-drop button.peligro.armado:hover {
+  background: color-mix(in srgb, var(--error) 65%, #fff);
 }
 
 @media (max-width: 767px) {

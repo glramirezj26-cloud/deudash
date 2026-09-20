@@ -3,17 +3,17 @@ import type { Entrada } from './types';
 import {
   cargarEntradas,
   entradasEjemplo,
-  exportarJSON,
   guardarEntradas,
   importarJSON,
   primerArranque,
 } from './lib/store';
-import { exportarCSV, importarCSV as importarCSVArchivo } from './lib/csv';
+import { importarCSV as importarCSVArchivo } from './lib/csv';
 import EntryForm from './components/EntryForm';
 import EntryTable from './components/EntryTable';
 import StatsCards from './components/StatsCards';
 import BalanceChart from './components/BalanceChart';
 import Composicion from './components/Composicion';
+import HeaderMenu from './components/HeaderMenu';
 
 type Toast = { tipo: 'ok' | 'err'; texto: string } | null;
 
@@ -25,8 +25,6 @@ function App() {
   const [toast, setToast] = useState<Toast>(null);
   const [armado, setArmado] = useState(false);
   const [armadoEjemplo, setArmadoEjemplo] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const csvRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<number | null>(null);
   const timerEjemploRef = useRef<number | null>(null);
 
@@ -160,26 +158,15 @@ function App() {
           <h1>DeuDash</h1>
           <p className="subtitulo">Panel de seguimiento de deudas</p>
         </div>
-        <div className="acciones">
-          <button onClick={() => exportarJSON(entradas)}>Exportar JSON</button>
-          <button onClick={() => fileRef.current?.click()}>Importar JSON</button>
-          <button onClick={() => exportarCSV(entradas)}>Exportar CSV</button>
-          <button onClick={() => csvRef.current?.click()}>Importar CSV</button>
-          <button
-            className={`btn-confirmar ${armadoEjemplo ? 'peligro armado' : ''}`}
-            onClick={cargarEjemplo}
-          >
-            {armadoEjemplo ? '¿Seguro? Cargar ejemplo' : 'Datos de ejemplo'}
-          </button>
-          <button
-            className={`btn-confirmar ${armado ? 'peligro armado' : 'peligro'}`}
-            onClick={limpiar}
-          >
-            {armado ? '¿Seguro? Confirmar limpieza' : 'Limpiar todo'}
-          </button>
-          <input ref={fileRef} type="file" accept="application/json" hidden onChange={importar} />
-          <input ref={csvRef} type="file" accept=".csv,text/csv" hidden onChange={importarCsv} />
-        </div>
+        <HeaderMenu
+          entradas={entradas}
+          armado={armado}
+          armadoEjemplo={armadoEjemplo}
+          onLimpiar={limpiar}
+          onCargarEjemplo={cargarEjemplo}
+          onImportarJSON={importar}
+          onImportarCSV={importarCsv}
+        />
       </header>
 
       <StatsCards entradas={entradas.filter((e) => e.visible)} />

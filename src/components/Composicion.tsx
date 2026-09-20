@@ -54,14 +54,14 @@ export default function Composicion({ entradas, onRecolor, onEliminarConcepto }:
       <div className="composicion-grid">
         {paraTorta.length > 0 ? (
           <div className="composicion-pie">
-            <ResponsiveContainer width="100%" height={190}>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={paraTorta}
                   dataKey="saldo"
                   nameKey="nombre"
-                  innerRadius={50}
-                  outerRadius={78}
+                  innerRadius={75}
+                  outerRadius={117}
                   paddingAngle={2}
                   stroke="none"
                 >
