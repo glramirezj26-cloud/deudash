@@ -177,7 +177,6 @@ export interface Kpis {
   totalCredito: number;
   totalDebito: number;
   variacion: number | null;
-  variacionMeses: number;
   topNombre: string | null;
   topMonto: number;
   cantidad: number;
@@ -186,8 +185,6 @@ export interface Kpis {
   porcentajePagado: number | null;
   creditoCount: number;
   debitoCount: number;
-  meses: number;
-  promedioCreditoMes: number | null;
   pctRestante: number | null;
   pctBajoPico: number | null;
   saldoPrevio: number | null;
@@ -236,12 +233,10 @@ export function kpis(entradas: Entrada[], periodo = 3): Kpis {
   }
 
   let variacion: number | null = null;
-  let variacionMeses = 1;
   if (serie.length >= 2) {
     const p = Math.max(1, Math.min(6, periodo));
     const ventana = Math.min(p, serie.length - 1);
     variacion = serie[serie.length - 1].saldo - serie[serie.length - 1 - ventana].saldo;
-    variacionMeses = ventana;
   }
 
   const saldoActual = serie.length > 0 ? serie[serie.length - 1].saldo : 0;
@@ -251,7 +246,6 @@ export function kpis(entradas: Entrada[], periodo = 3): Kpis {
     totalCredito,
     totalDebito,
     variacion,
-    variacionMeses,
     topNombre,
     topMonto,
     cantidad: entradas.length,
@@ -260,8 +254,6 @@ export function kpis(entradas: Entrada[], periodo = 3): Kpis {
     porcentajePagado,
     creditoCount,
     debitoCount,
-    meses: serie.length,
-    promedioCreditoMes: serie.length > 0 ? totalCredito / serie.length : null,
     pctRestante: porcentajePagado !== null ? 100 - porcentajePagado : null,
     pctBajoPico:
       pico !== null && pico > 0 && saldoActual < pico ? ((saldoActual - pico) / pico) * 100 : null,

@@ -294,6 +294,10 @@ button.peligro.armado:hover {
   text-fit: shrink 60%;
 }
 
+.kpi.destacada .lado-saldo .valor {
+  font-size: calc(var(--fs-lg) * 1.25);
+}
+
 .kpi .sub {
   font-size: var(--fs-sm);
   text-fit: shrink 85%;
@@ -414,6 +418,10 @@ button.peligro.armado:hover {
 @supports not (text-fit: shrink) {
   .kpi .valor {
     font-size: clamp(0.6rem, 12cqi, var(--fs-lg));
+  }
+
+  .kpi.destacada .lado-saldo .valor {
+    font-size: clamp(0.75rem, 15cqi, calc(var(--fs-lg) * 1.25));
   }
 }
 

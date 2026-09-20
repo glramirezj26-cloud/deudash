@@ -11,7 +11,6 @@ const PERIODOS = [1, 2, 3, 4, 5, 6];
 export default function StatsCards({ entradas }: Props) {
   const [periodo, setPeriodo] = useState(3);
   const s = kpis(entradas, periodo);
-  const positiva = s.saldoActual > 0;
 
   return (
     <div className="kpis">
@@ -20,7 +19,6 @@ export default function StatsCards({ entradas }: Props) {
         <span className="cuerpo">
           <span className="lado-saldo">
             <span className="valor truncar monto-pendiente" title={fmt(s.saldoActual)}>{fmt(s.saldoActual)}</span>
-            <span className="sub">{positiva ? 'Debés' : s.saldoActual < 0 ? 'Saldo a favor' : 'Sin deuda'}</span>
           </span>
           {s.porcentajePagado !== null && s.pctRestante !== null && (
             <span className="lado-progreso">
@@ -50,34 +48,15 @@ export default function StatsCards({ entradas }: Props) {
       <div className="kpi">
         <span className="label">Total cargado</span>
         <span className="valor truncar monto-credito" title={fmt(s.totalCredito)}>{fmt(s.totalCredito)}</span>
-        <span className="detalle">
-          <span className="fila">
-            <span className="k">Créditos</span>
-            <span className="v">{s.creditoCount}</span>
-          </span>
-          <span className="fila">
-            <span className="k">Promedio/mes</span>
-            <span className="v">{s.promedioCreditoMes !== null ? fmt(s.promedioCreditoMes) : '—'}</span>
-          </span>
-        </span>
       </div>
       <div className="kpi">
         <span className="label">Total abonado</span>
         <span className="valor truncar monto-debito" title={fmt(s.totalDebito)}>{fmt(s.totalDebito)}</span>
-        <span className="detalle">
-          <span className="fila">
-            <span className="k">Débitos</span>
-            <span className="v">{s.debitoCount}</span>
-          </span>
-        </span>
       </div>
       <div className="kpi variacion">
         <span className="label">Variación</span>
         <span className={`valor truncar ${s.variacion === null ? '' : s.variacion > 0 ? 'monto-credito' : s.variacion < 0 ? 'monto-debito' : ''}`} title={s.variacion === null ? undefined : fmtFirmado(s.variacion)}>
           {s.variacion === null ? '—' : `${s.variacion > 0 ? '▲' : s.variacion < 0 ? '▼' : '▪'} ${fmtFirmado(s.variacion)}`}
-        </span>
-        <span className="sub">
-          en {s.variacionMeses} {s.variacionMeses === 1 ? 'mes' : 'meses'}
         </span>
         {s.variacion !== null && s.saldoPrevio !== null && (
           <span className="detalle">
