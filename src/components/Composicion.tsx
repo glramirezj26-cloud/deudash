@@ -110,16 +110,18 @@ export default function Composicion({ entradas, onRecolor, onEliminarConcepto }:
               {resumen.map((r) => (
                 <tr key={r.nombre}>
                   <td className="dot-celda">
-                    <button
-                      type="button"
-                      className="dot-boton"
-                      style={{ background: r.color }}
-                      title="Cambiar color"
-                      aria-label={`Cambiar color de ${r.nombre}`}
-                      onClick={() => setRecoloreando(recoloreando === r.nombre ? null : r.nombre)}
-                    ></button>
-                    <span className="truncar" title={r.nombre}>
-                      {nombreCorto(r.nombre)}
+                    <span className="dot-fila">
+                      <button
+                        type="button"
+                        className="dot-boton"
+                        style={{ background: r.color }}
+                        title="Cambiar color"
+                        aria-label={`Cambiar color de ${r.nombre}`}
+                        onClick={() => setRecoloreando(recoloreando === r.nombre ? null : r.nombre)}
+                      ></button>
+                      <span className="truncar" title={r.nombre}>
+                        {nombreCorto(r.nombre)}
+                      </span>
                     </span>
                     {recoloreando === r.nombre && (
                       <div className="paleta-pop">

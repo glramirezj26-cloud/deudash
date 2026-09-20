@@ -5,6 +5,15 @@
 - `npm run build` — verificación completa: `tsc -b && vite build` (no hay tests, ni CI)
 - `npm run lint` — oxlint (config en `.oxlintrc.json`)
 
+## Proceso obligatorio antes de analizar y ejecutar cambios
+- Todo cambio debe ser **integral**: antes de proponerlo y de ejecutarlo, verificar que no genere problemas nuevos ni futuros.
+- Checklist previo a editar:
+  1. Trazar todos los usos del código/estilo que se va a tocar (referencias cruzadas, props, clases).
+  2. Prever interacciones: orden de cascada CSS y especificidad, media queries, breakpoints mobile-first (768px), re-renders, estados y timers.
+  3. Tener presente las reglas de negocio del dominio de este repo antes de modificar cualquier lógica.
+  4. Correr `npm run build` y `npm run lint` como verificación final obligatoria tras cada cambio.
+- Ejemplo de riesgo real ya vivido: una regla CSS correcta pero ubicada después de otra en cascada la pisa silenciosamente (`.chart-ancho` en `index.css`). El orden y la especificidad importan tanto como la regla en sí.
+
 ## Contexto técnico
 - Dependencias mínimas: solo `react`, `react-dom` y `recharts`. No hay lib de estado ni de estilos; todo lo demás es código propio.
 - `tsc -b` corre estricto: `noUnusedLocals`, `noUnusedParameters` y `erasableSyntaxOnly` (sintaxis no-eraseable como `enum`/`namespace` rompe el build).

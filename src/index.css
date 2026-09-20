@@ -174,6 +174,10 @@ h2 {
 }
 
 @media (max-width: 767px) {
+  .menu-acciones {
+    width: 100%;
+  }
+
   .tabla-head .nota {
     display: flex;
     align-items: center;
@@ -326,6 +330,33 @@ button.peligro.armado:hover {
   margin-bottom: var(--gap-section);
 }
 
+.grafico-scroll {
+  position: relative;
+  overflow-x: auto;
+}
+
+.chart-ancho {
+  min-width: 100%;
+}
+
+.bubble-punto {
+  position: absolute;
+  z-index: 45;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .chart-ancho {
+    min-width: 700px;
+  }
+}
+
+@media (min-width: 768px) {
+  .grafico-scroll {
+    overflow: visible;
+  }
+}
+
 .grafico-head {
   display: flex;
   justify-content: space-between;
@@ -407,10 +438,14 @@ button.peligro.armado:hover {
 
 .dot-celda {
   position: relative;
+}
+
+.dot-celda .dot-fila {
   display: flex;
   align-items: center;
   gap: 6px;
   justify-content: flex-start;
+  min-width: 0;
 }
 
 .celda-nombre {
@@ -469,15 +504,6 @@ button.peligro.armado:hover {
 
 .tooltip-chart .tooltip-saldo {
   margin-bottom: 2px;
-}
-
-.tooltip-lista {
-  margin-top: 8px;
-  border-top: 1px solid var(--border);
-  padding-top: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 .tooltip-item {
@@ -541,6 +567,7 @@ button.peligro.armado:hover {
 
 .tabla-resumen tfoot td {
   border-top: 2px solid var(--border);
+  border-bottom: none;
   background: var(--card-2);
   font-weight: 700;
 }
@@ -805,6 +832,7 @@ td {
 
 .tabla-resumen td {
   text-align: right;
+  border-bottom: 1px solid var(--border);
 }
 
 .th-ordenable {
@@ -834,6 +862,14 @@ th[aria-sort='descending'] .th-ordenable {
 
 tbody tr:hover td {
   background: var(--row-hover);
+}
+
+.tabla-resumen tbody tr:hover {
+  background: var(--row-hover);
+}
+
+.tabla-resumen tbody tr:hover td {
+  background: transparent;
 }
 
 .fila-oculta td {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -41,19 +41,6 @@ function TooltipGrafico({ active, payload }: { active?: boolean; payload?: Array
       <div className={punto.neto > 0 ? 'monto-credito' : punto.neto < 0 ? 'monto-debito' : ''}>
         Neto: {fmtFirmado(punto.neto)}
       </div>
-      {punto.entradas.length > 0 && (
-        <div className="tooltip-lista">
-          {punto.entradas.map((e) => (
-            <div key={e.id} className="tooltip-item">
-              <span>{e.nombre}</span>
-              <span className={e.tipo === 'credito' ? 'monto-credito' : 'monto-debito'}>
-                {e.tipo === 'credito' ? '+' : '−'}
-                {fmt(e.monto)}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -84,8 +71,42 @@ function TooltipDeuda({
   );
 }
 
+function BubblePunto({ vista, fila }: { vista: Vista; fila: PuntoSerie | Record<string, string | number> }) {
+  if (vista === 'total') {
+    const p = fila as PuntoSerie;
+    return (
+      <div className="tooltip-chart">
+        <div className="tooltip-titulo">{p.etiqueta}</div>
+        <div className="tooltip-saldo">Saldo: {fmt(p.saldo)}</div>
+        <div className={p.neto > 0 ? 'monto-credito' : p.neto < 0 ? 'monto-debito' : ''}>
+          Neto: {fmtFirmado(p.neto)}
+        </div>
+      </div>
+    );
+  }
+  const filaRec = fila as Record<string, string | number>;
+  const items: Array<[string, number]> = [];
+  for (const [k, v] of Object.entries(filaRec)) {
+    if (k !== 'clave' && k !== 'etiqueta' && typeof v === 'number') items.push([k, v]);
+  }
+  return (
+    <div className="tooltip-chart">
+      <div className="tooltip-titulo">{String(filaRec.etiqueta ?? '')}</div>
+      {items.map(([nombre, valor]) => (
+        <div key={nombre} className="tooltip-item">
+          <span>{nombre}</span>
+          <span>{fmt(valor)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
   const [vista, setVista] = useState<Vista>('deuda');
+  const [puntoActivo, setPuntoActivo] = useState<{ x: number; y: number; indice: number } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   if (entradas.length === 0) {
     return (
@@ -140,6 +161,45 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
     });
   }
 
+  const manejarTap = (estado: { activeIndex?: number | string | null } | null, e: React.MouseEvent) => {
+    const scrollRect = scrollRef.current?.getBoundingClientRect();
+    const contentRect = chartRef.current?.getBoundingClientRect();
+    if (!scrollRect || !contentRect) {
+      setPuntoActivo(null);
+      return;
+    }
+
+    let indice: number | null = null;
+    const act = estado?.activeIndex;
+    if (typeof act === 'number' && Number.isInteger(act)) indice = act;
+    else if (typeof act === 'string') {
+      const n = Number(act);
+      if (Number.isInteger(n)) indice = n;
+    }
+
+    if (indice === null) {
+      const x = e.clientX - contentRect.left;
+      const plotW = contentRect.width - 48 - 10;
+      const n = data.length;
+      if (n === 1) indice = 0;
+      else if (plotW > 0 && n > 1) {
+        const est = Math.round((x - 48) / (plotW / (n - 1)));
+        if (est >= 0 && est < n) indice = est;
+      }
+    }
+
+    if (indice === null || indice >= data.length) {
+      setPuntoActivo(null);
+      return;
+    }
+
+    setPuntoActivo((prev) =>
+      prev && prev.indice === indice
+        ? null
+        : { indice, x: e.clientX - scrollRect.left, y: e.clientY - scrollRect.top }
+    );
+  };
+
   return (
     <div className="tarjeta grafico">
       <div className="grafico-head">
@@ -148,14 +208,14 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
           <button
             type="button"
             className={vista === 'deuda' ? 'seleccionado' : ''}
-            onClick={() => setVista('deuda')}
+            onClick={() => { setVista('deuda'); setPuntoActivo(null); }}
           >
             Por deuda
           </button>
           <button
             type="button"
             className={vista === 'total' ? 'seleccionado' : ''}
-            onClick={() => setVista('total')}
+            onClick={() => { setVista('total'); setPuntoActivo(null); }}
           >
             Línea total
           </button>
@@ -184,8 +244,10 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
           No hay entradas visibles para graficar. Activá algún concepto de la leyenda o los toggles de la tabla.
         </p>
       ) : (
+        <div className="grafico-scroll" ref={scrollRef}>
+          <div className="chart-ancho" ref={chartRef}>
         <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={data as Array<Record<string, unknown>>} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <LineChart data={data as Array<Record<string, unknown>>} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} onClick={manejarTap}>
           <CartesianGrid stroke={cssVar('--border')} strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="etiqueta"
@@ -245,6 +307,19 @@ export default function BalanceChart({ entradas, onToggleConcepto }: Props) {
           )}
         </LineChart>
         </ResponsiveContainer>
+          </div>
+          {puntoActivo && puntoActivo.indice >= 0 && puntoActivo.indice < data.length && (
+            <div
+              className="bubble-punto"
+              style={{
+                left: Math.max(4, Math.min(puntoActivo.x + 12, (scrollRef.current?.clientWidth ?? 320) - 190 - 4)),
+                top: Math.max(4, puntoActivo.y - 44),
+              }}
+            >
+              <BubblePunto vista={vista} fila={data[puntoActivo.indice]} />
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
