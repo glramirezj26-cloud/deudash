@@ -296,6 +296,8 @@ export interface ResumenConcepto {
   porcentajeRestante: number | null;
   desde: string;
   ultimoMes: string;
+  desdeFecha: number;
+  ultimoFecha: number;
   mesesActivo: number;
 }
 
@@ -353,6 +355,8 @@ export function resumenPorConcepto(entradas: Entrada[]): ResumenConcepto[] {
     porcentajeRestante: d.credito > 0 ? (d.saldo / d.credito) * 100 : null,
     desde: etiquetaMes(d.desde),
     ultimoMes: etiquetaMes(d.hasta),
+    desdeFecha: d.desde,
+    ultimoFecha: d.hasta,
     mesesActivo: d.meses.size,
   }));
 

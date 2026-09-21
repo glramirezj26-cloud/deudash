@@ -18,7 +18,6 @@
   --card-2: #1c2333;
   --border: #262b38;
   --border-soft: #20242f;
-  --border-focus: #2b3550;
   --text: #e5e7eb;
   --muted: #9ca3af;
   --accent: #60a5fa;
@@ -36,9 +35,7 @@
   --fs-sm: 0.75rem;
   --fs-body: 0.85rem;
   --fs-md: 1rem;
-  --fs-lg: 1.25rem;
   --fs-xl: 1.5rem;
-  --fs-hero: 1.4rem;
   /* tipografía numérica */
   --spacing-monto: 0.05em;
 }
@@ -249,74 +246,73 @@ button.peligro.armado:hover {
 
 @media (min-width: 768px) {
   .kpis {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  .kpi.destacada,
-  .kpi.variacion {
+  .kpi.totales {
     grid-column: span 2;
   }
+}
+
+.kpi.totales .totales-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.kpi.totales .totales-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kpi.totales .totales-col + .totales-col {
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
 }
 
 .kpi {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: var(--card-pad);
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
   min-width: 0;
+  min-height: 6rem;
   container-type: inline-size;
 }
 
 .kpi .label {
   color: var(--muted);
-  font-size: var(--fs-xs);
+  font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .kpi .valor {
-  font-size: var(--fs-hero);
+  font-size: 1.05rem;
   font-weight: 700;
   text-fit: shrink 60%;
 }
 
-.kpi.destacada .lado-saldo .valor {
-  font-size: calc(var(--fs-hero) * 1.3);
+.kpi .detalle,
+.kpi > .selectores,
+.kpi > .nota {
+  margin-top: auto;
 }
 
 .kpi .sub {
-  font-size: var(--fs-sm);
+  font-size: 0.65rem;
   text-fit: shrink 85%;
 }
 
 .kpi .detalle {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-}
-
-.kpi .cuerpo {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.kpi .lado-saldo {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
-  min-width: 0;
-}
-
-.kpi .lado-progreso {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-  flex: 1;
 }
 
 .kpi .fila {
@@ -324,7 +320,7 @@ button.peligro.armado:hover {
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
-  font-size: var(--fs-sm);
+  font-size: 0.65rem;
   min-width: 0;
 }
 
@@ -339,12 +335,16 @@ button.peligro.armado:hover {
   white-space: nowrap;
 }
 
+.kpi .nota {
+  font-size: 0.65rem;
+}
+
 .barra-progreso {
-  height: 6px;
+  height: 5px;
   border-radius: 999px;
   background: var(--surface-pop);
   overflow: hidden;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 
 .barra-progreso > span {
@@ -354,31 +354,19 @@ button.peligro.armado:hover {
   background: var(--debit);
 }
 
-@container (min-width: 480px) {
-  .kpi.destacada .cuerpo {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .kpi.destacada .lado-progreso {
-    max-width: 60%;
-  }
-}
-
 .selectores {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex-wrap: wrap;
 }
 
 .selectores .pill {
   flex: 1;
-  min-width: 30px;
-  padding: 3px 0;
-  font-size: var(--fs-sm);
+  min-width: 26px;
+  padding: 2px 0;
+  font-size: 0.65rem;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.3;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-pop);
@@ -397,18 +385,9 @@ button.peligro.armado:hover {
   color: var(--accent);
 }
 
-.kpi.destacada {
-  background: linear-gradient(135deg, var(--card-2), var(--card));
-  border-color: var(--border-focus);
-}
-
 @supports not (text-fit: shrink) {
   .kpi .valor {
-    font-size: clamp(0.8rem, 14cqi, var(--fs-hero));
-  }
-
-  .kpi.destacada .lado-saldo .valor {
-    font-size: clamp(1rem, 18cqi, calc(var(--fs-hero) * 1.3));
+    font-size: clamp(0.65rem, 11cqi, 1.05rem);
   }
 }
 
