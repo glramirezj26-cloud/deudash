@@ -14,44 +14,44 @@ export default function StatsCards({ entradas }: Props) {
 
   return (
     <div className="kpis">
-      <div className="kpi">
+      <div className="kpi totales">
         <span className="label">Saldo actual</span>
         <span className="valor truncar monto-pendiente" title={fmt(s.saldoActual)}>{fmt(s.saldoActual)}</span>
-        {s.porcentajePagado !== null && s.pctRestante !== null && (
-          <span className="detalle">
-            <span className="fila">
-              <span className="k">Abonado</span>
-              <span className="v monto-debito">{fmtPct(s.porcentajePagado)}</span>
-            </span>
-            <span
-              className="barra-progreso"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={Math.max(0, Math.min(100, Math.round(s.porcentajePagado)))}
-              aria-label="Porcentaje abonado de lo cargado"
-              title={fmtPct(s.porcentajePagado)}
-            >
-              <span style={{ width: `${Math.max(0, Math.min(100, s.porcentajePagado))}%` }}></span>
-            </span>
-            <span className="fila">
-              <span className="k">Restante</span>
-              <span className="v monto-pendiente">{fmtPct(s.pctRestante)}</span>
-            </span>
+        <hr className="divisor" />
+        <span className="detalle">
+          <span className="fila">
+            <span className="k">Cargado</span>
+            <span className="v monto-credito">{fmt(s.totalCredito)}</span>
           </span>
-        )}
-      </div>
-      <div className="kpi totales">
-        <div className="totales-grid">
-          <div className="totales-col">
-            <span className="label">Cargado</span>
-            <span className="valor truncar monto-credito" title={fmt(s.totalCredito)}>{fmt(s.totalCredito)}</span>
-          </div>
-          <div className="totales-col">
-            <span className="label">Abonado</span>
-            <span className="valor truncar monto-debito" title={fmt(s.totalDebito)}>{fmt(s.totalDebito)}</span>
-          </div>
-        </div>
+          <span className="fila">
+            <span className="k">Abonado</span>
+            <span className="v monto-debito">{fmt(s.totalDebito)}</span>
+          </span>
+          {s.porcentajePagado !== null && s.pctRestante !== null && (
+            <>
+              <hr className="divisor" />
+              <span className="fila">
+                <span className="k">Abonado</span>
+                <span className="v monto-debito">{fmtPct(s.porcentajePagado)}</span>
+              </span>
+              <span className="fila">
+                <span className="k">Restante</span>
+                <span className="v monto-pendiente">{fmtPct(s.pctRestante)}</span>
+              </span>
+              <span
+                className="barra-progreso"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.max(0, Math.min(100, Math.round(s.porcentajePagado)))}
+                aria-label="Porcentaje abonado de lo cargado"
+                title={fmtPct(s.porcentajePagado)}
+              >
+                <span style={{ width: `${Math.max(0, Math.min(100, s.porcentajePagado))}%` }}></span>
+              </span>
+            </>
+          )}
+        </span>
       </div>
       <div className="kpi">
         <span className="label">Variación</span>

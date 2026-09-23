@@ -28,8 +28,8 @@
   /* sombras */
   --shadow-elevated: 0 12px 28px rgba(0, 0, 0, 0.5);
   /* spacing */
-  --gap-section: 16px;
-  --card-pad: 16px;
+  --gap-section: 20px;
+  --card-pad: 20px;
   /* escala tipográfica */
   --fs-xs: 0.7rem;
   --fs-sm: 0.75rem;
@@ -251,35 +251,23 @@ button.peligro.armado:hover {
 
   .kpi.totales {
     grid-column: span 2;
+    min-height: calc(6rem * 1.2);
   }
 }
 
-.kpi.totales .totales-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.kpi.totales .totales-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.kpi.totales .totales-col + .totales-col {
-  border-left: 1px solid var(--border);
-  padding-left: 12px;
+.kpi.totales .divisor {
+  border: 0;
+  border-top: 1px solid var(--border);
 }
 
 .kpi {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 8px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
   min-width: 0;
   min-height: 6rem;
   container-type: inline-size;
@@ -312,14 +300,14 @@ button.peligro.armado:hover {
 .kpi .detalle {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .kpi .fila {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 10px;
+  gap: 12px;
   font-size: 0.65rem;
   min-width: 0;
 }
@@ -344,7 +332,7 @@ button.peligro.armado:hover {
   border-radius: 999px;
   background: var(--surface-pop);
   overflow: hidden;
-  margin: 1px 0;
+  margin: 4px 0;
 }
 
 .barra-progreso > span {
